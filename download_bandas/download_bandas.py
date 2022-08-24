@@ -1,11 +1,15 @@
 import os
+from tabnanny import check
+import ee
 import shutil
 from time import sleep
 from pathlib import Path
+from datetime import datetime, timedelta
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
-from functions_project.FunctionsProject import VerifyDownload
+from functions_project.FunctionsProject import GisFunctions, CheckDownload
 
 #Configuração Selenium
 user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.56'
@@ -52,18 +56,11 @@ class Download_Cenas:
         for cena in lista_cenas:
             
             #Aguarda a confirmação de download de todas as bandas da cena para prosseguir para a próxima cena
-            download = VerifyDownload.confirm_download(download_folder_selenium)
+            CheckDownload.confirm_download(download_folder_selenium)
 
             if cena not in lista_cenas_baixadas:
 
-                lista_cenas_baixadas = list(dict.fromkeys(lista_cenas_baixadas))
-
-                lista_cenas_que_faltam = len(list(set(lista_cenas_baixadas) ^ set(lista_cenas)))
-                if lista_cenas_que_faltam == 1:
-                    print(f'\nAinda falta {lista_cenas_que_faltam} Cena...')
-                else:
-                    print(f'\nAinda faltam {lista_cenas_que_faltam} Cenas...')
-
+                CheckDownload.verificar_quantos_valtam(lista_cenas_baixadas, lista_cenas)
 
                 number = cena[39:41]
                 letra_1 = cena[41:42]
@@ -126,24 +123,11 @@ class Download_Cenas:
 
 
                 #Aguarda a confirmação de download de todas as bandas da cena para prosseguir para a próxima cena
-                VerifyDownload.confirm_download(download_folder_selenium)
+                CheckDownload.confirm_download(download_folder_selenium)
     
-                #Move as bandas baixadas para o diretório escolhido
                 try:
-                    for r, d, f in os.walk(download_folder_selenium):
-                        for file in f:
-                            if file.endswith(".jp2"):
-                                file_path = Path(os.path.join(r, file))
-                                
-                                filename = Path(os.path.join(r, file)).stem
-                                filename_cena = filename[17:77]
-
-                                if (filename_cena in lista_cenas) & (filename not in lista_cenas_baixadas):
-                                    new_folder_cena = (f'{pasta_download}\\{filename}.jp2')
-                                    shutil.move(file_path, new_folder_cena)
-
-                    print(f'Download das Bandas da cena "{cena}" finalizado!\n')
-
+                    #Move as bandas baixadas para o diretório escolhido
+                    CheckDownload.move_bands_to_folder(download_folder_selenium, lista_cenas_baixadas, lista_cenas, pasta_download, cena)
 
                     lista_cenas_baixadas.append(cena)
                 except:
@@ -151,3 +135,48 @@ class Download_Cenas:
                     pass
 
         print('\n\n -------- Download das cenas finalizados!! --------')
+
+
+class DetectarCenas:
+    def cenas(gdf, date_range):
+        lista_cenas = []
+
+        # Trigger the authentication flow gee.
+        #ee.Authenticate()
+
+        # Initialize the library gee.
+        ee.Initialize()
+        
+        gdf = GisFunctions.dissolve_geometry(gdf)
+
+        gdf=gdf.convex_hull
+
+        feature = GisFunctions.feature(gdf, ee)
+
+        ee_object = ee.FeatureCollection(feature)
+
+        s2 = ee.ImageCollection("COPERNICUS/S2_SR")
+
+        
+        print('\nCenas encontradas:\n')
+        for data in date_range:
+
+            td = timedelta(4)
+            start = str(datetime.strptime(data, '%Y-%m-%d').date())
+            end = str(datetime.strptime(data, '%Y-%m-%d').date() + td)
+
+            s2_filter = s2.filterBounds(ee_object) \
+                        .filterDate(start, end)
+
+            for i in range(len((s2_filter.getInfo()['features']))):
+                properties = s2_filter.getInfo()['features'][i]['properties']
+
+                product_id = properties['PRODUCT_ID']
+                print(product_id)
+
+                lista_cenas.append(product_id)
+
+            len_lista_cenas = len(lista_cenas)
+        print(f'\n\nForam encontradas {len_lista_cenas} Cenas!!!!')
+        
+        return lista_cenas

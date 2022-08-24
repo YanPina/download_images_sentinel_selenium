@@ -1,6 +1,8 @@
 import os
+import shutil
 import psycopg2
 from time import sleep
+from pathlib import Path
 
 import geojson
 import geopandas as gpd
@@ -84,13 +86,13 @@ class DbFunctions:
         return psycopg2.connect(f"host={DB_HOST} dbname={DB_NAME} user={DB_USER} password={DB_PASSWORD}")
 
 
-class VerifyDownload:
+class CheckDownload:
 
     def confirm_download(download_folder_selenium):
         fileends = "crdownload"
         while "crdownload" == fileends:
             sleep(3)
-            newest_file = VerifyDownload.latest_download_file(download_folder_selenium)
+            newest_file = CheckDownload.latest_download_file(download_folder_selenium)
             if "crdownload" in newest_file:
                 fileends = "crdownload"
             else:
@@ -107,5 +109,30 @@ class VerifyDownload:
 
         return newest
 
+    def verificar_quantos_valtam(lista_cenas_baixadas, lista_cenas):
+        lista_cenas_baixadas = list(dict.fromkeys(lista_cenas_baixadas))
+
+        lista_cenas_que_faltam = len(list(set(lista_cenas_baixadas) ^ set(lista_cenas)))
+        if lista_cenas_que_faltam == 1:
+            print(f'\nAinda falta {lista_cenas_que_faltam} Cena...')
+        else:
+            print(f'\nAinda faltam {lista_cenas_que_faltam} Cenas...')
+
+
+
+    def move_bands_to_folder(download_folder_selenium, lista_cenas_baixadas, lista_cenas, pasta_download, cena):
+        for r, d, f in os.walk(download_folder_selenium):
+            for file in f:
+                if file.endswith(".jp2"):
+                    file_path = Path(os.path.join(r, file))
+                    
+                    filename = Path(os.path.join(r, file)).stem
+                    filename_cena = filename[17:77]
+
+                    if (filename_cena in lista_cenas) & (filename not in lista_cenas_baixadas):
+                        new_folder_cena = (f'{pasta_download}\\{filename}.jp2')
+                        shutil.move(file_path, new_folder_cena)
+
+        print(f'Download das Bandas da cena "{cena}" finalizado!\n')
     
     

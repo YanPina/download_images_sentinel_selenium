@@ -2,10 +2,7 @@ import pandas as pd
 import geopandas as gpd
 from datetime import datetime
 
-
-from cenas.detectar_cenas import Cenas
-from download_cenas.download_bandas import Download_Cenas
-
+from download_bandas.download_bandas import Download_Cenas, DetectarCenas
 from functions_project.FunctionsProject import GisFunctions, DbFunctions
 
 #Pasta onde serão armazenadas as imagens
@@ -38,7 +35,7 @@ gdf = GisFunctions.reproject_epsg(gdf)
 for data in date_range_full:
     date_range=[data]
 
-    lista_cenas = Cenas.cenas(gdf, date_range)
+    lista_cenas = DetectarCenas.cenas(gdf, date_range)
 
     download_images = Download_Cenas.download_bandas(lista_cenas, pasta_download, download_folder_selenium)
    
