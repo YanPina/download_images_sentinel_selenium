@@ -1,9 +1,10 @@
 import os
-import geojson
 import psycopg2
-import shapely.wkt
 from time import sleep
+
+import geojson
 import geopandas as gpd
+import shapely.wkt
 from shapely.geometry import Polygon, MultiPolygon
 
 class GisFunctions:
@@ -97,7 +98,7 @@ class VerifyDownload:
         
         return fileends
 
-        
+
     def latest_download_file(download_folder_selenium):
         path = download_folder_selenium
         os.chdir(path)
