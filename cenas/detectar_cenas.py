@@ -1,9 +1,4 @@
 import ee
-import geojson
-import shapely.wkt
-import pandas as pd
-import geopandas as gpd
-
 from datetime import datetime, timedelta
 
 from functions_project.FunctionsProject import GisFunctions

@@ -5,7 +5,7 @@ from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
-from functions_project.FunctionsProject import Confirm_Download
+from functions_project.FunctionsProject import VerifyDownload
 
 #Configuração Selenium
 user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.56'
@@ -52,7 +52,7 @@ class Download_Cenas:
         for cena in lista_cenas:
             
             #Aguarda a confirmação de download de todas as bandas da cena para prosseguir para a próxima cena
-            download = Confirm_Download.confirm_download(download_folder_selenium)
+            download = VerifyDownload.confirm_download(download_folder_selenium)
 
             if cena not in lista_cenas_baixadas:
 
@@ -126,7 +126,7 @@ class Download_Cenas:
 
 
                 #Aguarda a confirmação de download de todas as bandas da cena para prosseguir para a próxima cena
-                Confirm_Download.confirm_download(download_folder_selenium)
+                VerifyDownload.confirm_download(download_folder_selenium)
     
                 #Move as bandas baixadas para o diretório escolhido
                 try:

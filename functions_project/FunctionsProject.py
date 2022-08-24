@@ -83,7 +83,21 @@ class DbFunctions:
         return psycopg2.connect(f"host={DB_HOST} dbname={DB_NAME} user={DB_USER} password={DB_PASSWORD}")
 
 
-class Latest_File:
+class VerifyDownload:
+
+    def confirm_download(download_folder_selenium):
+        fileends = "crdownload"
+        while "crdownload" == fileends:
+            sleep(3)
+            newest_file = VerifyDownload.latest_download_file(download_folder_selenium)
+            if "crdownload" in newest_file:
+                fileends = "crdownload"
+            else:
+                fileends = "finalizado"
+        
+        return fileends
+
+        
     def latest_download_file(download_folder_selenium):
         path = download_folder_selenium
         os.chdir(path)
@@ -92,17 +106,5 @@ class Latest_File:
 
         return newest
 
-
-class Confirm_Download:
     
-    def confirm_download(download_folder_selenium):
-        fileends = "crdownload"
-        while "crdownload" == fileends:
-            sleep(3)
-            newest_file = Latest_File.latest_download_file(download_folder_selenium)
-            if "crdownload" in newest_file:
-                fileends = "crdownload"
-            else:
-                fileends = "finalizado"
-        
-        return fileends
+    
