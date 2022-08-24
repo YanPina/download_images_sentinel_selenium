@@ -24,7 +24,7 @@ end_date = str(datetime.strptime(final_date, '%d/%m/%Y').date())
 date_range_full = pd.date_range(start=start_date, end=end_date, freq='5D').strftime('%Y-%m-%d').tolist()
 
 #criar engine
-connect = DbFunctions._connection_db()
+connect = DbFunctions.__connection_db()
 
 #Lê tabela de talhoes
 query_db = ''

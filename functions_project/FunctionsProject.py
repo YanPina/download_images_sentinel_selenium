@@ -9,6 +9,35 @@ import geopandas as gpd
 import shapely.wkt
 from shapely.geometry import Polygon, MultiPolygon
 
+
+
+class WebDriver:
+    def SeleniumWebDriver(webdriver):
+
+        #Configuração Selenium
+        user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.56'
+
+        options = webdriver.ChromeOptions()
+        #options.add_argument('--headless') #Roda o webdriver em background
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-gpu')
+        #options.add_argument("--start-maximized")
+        options.add_argument('--disable-extensions')
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-popup-blocking")
+        options.add_experimental_option("useAutomationExtension", False)
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+
+        #User
+        options.add_argument(f'user-agent={user_agent}')
+
+        #Remove Logs desnecessários
+        driver = webdriver.Chrome(executable_path=r"webdriver\\chromedriver.exe", options=options)
+        driver.implicitly_wait(30)
+
+        return driver
+
+
 class GisFunctions:
     
     def convert_3D_2D(geometry):
@@ -77,7 +106,7 @@ class GisFunctions:
 
 
 class DbFunctions:
-    def _connection_db():
+    def __connection_db():
         DB_USER = os.getenv("DB_USER")
         DB_NAME = os.getenv("DB_NAME")
         DB_PASSWORD = os.getenv("DB_PASSWORD")
@@ -88,11 +117,11 @@ class DbFunctions:
 
 class CheckDownload:
 
-    def confirm_download(download_folder_selenium):
+    def __confirm_download(download_folder_selenium):
         fileends = "crdownload"
         while "crdownload" == fileends:
             sleep(3)
-            newest_file = CheckDownload.latest_download_file(download_folder_selenium)
+            newest_file = CheckDownload.__latest_download_file(download_folder_selenium)
             if "crdownload" in newest_file:
                 fileends = "crdownload"
             else:
@@ -101,7 +130,7 @@ class CheckDownload:
         return fileends
 
 
-    def latest_download_file(download_folder_selenium):
+    def __latest_download_file(download_folder_selenium):
         path = download_folder_selenium
         os.chdir(path)
         files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)
@@ -119,8 +148,7 @@ class CheckDownload:
             print(f'\nAinda faltam {lista_cenas_que_faltam} Cenas...')
 
 
-
-    def move_bands_to_folder(download_folder_selenium, lista_cenas_baixadas, lista_cenas, pasta_download, cena):
+    def __move_bands_to_folder(download_folder_selenium, lista_cenas_baixadas, lista_cenas, pasta_download, cena):
         for r, d, f in os.walk(download_folder_selenium):
             for file in f:
                 if file.endswith(".jp2"):
@@ -135,4 +163,49 @@ class CheckDownload:
 
         print(f'Download das Bandas da cena "{cena}" finalizado!\n')
     
+
+    def list_downloaded_scenes(pasta_download):
+        lista_cenas_baixadas = []
+        # r=root, d=directories, f = files
+        for r, d, f in os.walk(pasta_download):
+            for file in f:
+                if file.endswith(".jp2"):
+                    file = Path(os.path.join(r, file)).stem
+                    filename_cena = file[17:77]
+                    
+                    lista_cenas_baixadas.append(filename_cena)
+
+        return lista_cenas_baixadas
+
+
     
+    def base_url(cena):
+        number = cena[39:41]
+        letra_1 = cena[41:42]
+        letras_2 = cena[42:44]
+
+        base_url = (f'https://console.cloud.google.com/storage/browser/gcp-public-data-sentinel-2/L2/tiles/{number}/{letra_1}/{letras_2}/{cena}.SAFE/GRANULE')
+
+        return base_url
+
+
+class Authentication:
+    def __login_google(driver, Keys):
+        try:
+
+            email = os.getenv("EMAIL_GOOGLE")
+            password = os.getenv("PASSWORD_GOOGLE")
+
+            input_email = driver.find_element_by_xpath('/html/body/div[1]/div[1]/div[2]/div/div[2]/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div[1]/div/div[1]/div/div[1]/input')
+            sleep(2)
+            input_email.send_keys(email)
+            input_email.send_keys(Keys.ENTER)
+
+            input_pass = driver.find_element_by_xpath('/html/body/div[1]/div[1]/div[2]/div/div[2]/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div[1]/div[1]/div/div/div/div/div[1]/div/div[1]/input')
+            sleep(2)
+            input_pass.send_keys(password)
+            input_pass.send_keys(Keys.ENTER)
+
+            sleep(2)
+        except:
+            pass

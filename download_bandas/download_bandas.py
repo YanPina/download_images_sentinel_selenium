@@ -1,51 +1,22 @@
-import os
-from tabnanny import check
 import ee
-import shutil
 from time import sleep
-from pathlib import Path
 from datetime import datetime, timedelta
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
-from functions_project.FunctionsProject import GisFunctions, CheckDownload
+from functions_project.FunctionsProject import GisFunctions, CheckDownload, WebDriver, Authentication
 
-#Configuração Selenium
-user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.56'
 
-options = webdriver.ChromeOptions()
-#options.add_argument('--headless') #Roda o webdriver em background
-options.add_argument('--no-sandbox')
-options.add_argument('--disable-gpu')
-#options.add_argument("--start-maximized")
-options.add_argument('--disable-extensions')
-options.add_argument("--disable-extensions")
-options.add_argument("--disable-popup-blocking")
-options.add_experimental_option("useAutomationExtension", False)
-options.add_experimental_option('excludeSwitches', ['enable-logging'])
-
-#User
-options.add_argument(f'user-agent={user_agent}')
-
-#Remove Logs desnecessários
-driver = webdriver.Chrome(executable_path=r"webdriver\\chromedriver.exe", options=options)
-driver.implicitly_wait(30)
 
 class Download_Cenas:
     def download_bandas(lista_cenas, pasta_download, download_folder_selenium):
 
+        driver = WebDriver.SeleniumWebDriver(webdriver)
+
         print('\n\n------ Iniciando Download e Processamento das Cenas... ------')
 
-        lista_cenas_baixadas = []
-        # r=root, d=directories, f = files
-        for r, d, f in os.walk(pasta_download):
-            for file in f:
-                if file.endswith(".jp2"):
-                    file = Path(os.path.join(r, file)).stem
-                    filename_cena = file[17:77]
-                    
-                    lista_cenas_baixadas.append(filename_cena)
+        lista_cenas_baixadas = CheckDownload.list_downloaded_scenes(pasta_download)
 
         #Exclui Duplicados
         lista_cenas = list(dict.fromkeys(lista_cenas))
@@ -56,41 +27,21 @@ class Download_Cenas:
         for cena in lista_cenas:
             
             #Aguarda a confirmação de download de todas as bandas da cena para prosseguir para a próxima cena
-            CheckDownload.confirm_download(download_folder_selenium)
+            CheckDownload.__confirm_download(download_folder_selenium)
 
             if cena not in lista_cenas_baixadas:
 
                 CheckDownload.verificar_quantos_valtam(lista_cenas_baixadas, lista_cenas)
 
-                number = cena[39:41]
-                letra_1 = cena[41:42]
-                letras_2 = cena[42:44]
-
                 band_link_part_1 = cena[38:44]
                 band_link_part_2 = cena[11:26]
 
-                base_url = (f'https://console.cloud.google.com/storage/browser/gcp-public-data-sentinel-2/L2/tiles/{number}/{letra_1}/{letras_2}/{cena}.SAFE/GRANULE')
+                base_url = CheckDownload.base_url(cena)
 
                 driver.get(base_url)
 
-
-                try:
-                    email = 'testeuserselenium@gmail.com'
-                    password = 'P@sstest'
-
-                    input_email = driver.find_element_by_xpath('/html/body/div[1]/div[1]/div[2]/div/div[2]/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div[1]/div/div[1]/div/div[1]/input')
-                    sleep(2)
-                    input_email.send_keys(email)
-                    input_email.send_keys(Keys.ENTER)
-
-                    input_pass = driver.find_element_by_xpath('/html/body/div[1]/div[1]/div[2]/div/div[2]/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div[1]/div[1]/div/div/div/div/div[1]/div/div[1]/input')
-                    sleep(2)
-                    input_pass.send_keys(password)
-                    input_pass.send_keys(Keys.ENTER)
-
-                    sleep(2)
-                except:
-                    pass
+                #Verifica se há solicitação de autenticação e a faz caso houver.
+                Authentication.__login_google(driver, Keys)
 
                 folder_data = driver.find_element_by_xpath('//*[@id="_0rif_cfc-table-caption-0-row-0"]/td[2]')
                 sleep(1)
@@ -127,7 +78,7 @@ class Download_Cenas:
     
                 try:
                     #Move as bandas baixadas para o diretório escolhido
-                    CheckDownload.move_bands_to_folder(download_folder_selenium, lista_cenas_baixadas, lista_cenas, pasta_download, cena)
+                    CheckDownload.__move_bands_to_folder(download_folder_selenium, lista_cenas_baixadas, lista_cenas, pasta_download, cena)
 
                     lista_cenas_baixadas.append(cena)
                 except:
