@@ -31,7 +31,7 @@ class Download_Cenas:
 
             if cena not in lista_cenas_baixadas:
 
-                CheckDownload.verificar_quantos_valtam(lista_cenas_baixadas, lista_cenas)
+                CheckDownload.verificar_quantos_faltam(lista_cenas_baixadas, lista_cenas)
 
                 band_link_part_1 = cena[38:44]
                 band_link_part_2 = cena[11:26]

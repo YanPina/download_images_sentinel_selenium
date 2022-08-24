@@ -138,7 +138,7 @@ class CheckDownload:
 
         return newest
 
-    def verificar_quantos_valtam(lista_cenas_baixadas, lista_cenas):
+    def verificar_quantos_faltam(lista_cenas_baixadas, lista_cenas):
         lista_cenas_baixadas = list(dict.fromkeys(lista_cenas_baixadas))
 
         lista_cenas_que_faltam = len(list(set(lista_cenas_baixadas) ^ set(lista_cenas)))
